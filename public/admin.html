@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Mugundan — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#f6f1e7;--paper2:#ede7d5;--ink:#1e1612;--ink2:#4a3f35;--ink3:#7a6e63;
+  --red:#c84b4b;--green:#4a9e5c;--blue:#4472b8;--amber:#c88b3a;
+  --font-h:'Caveat',cursive;--font-b:'Patrick Hand',cursive;
+}
+body{font-family:var(--font-b);background:#1a1a2e;color:#eee;font-size:15px;min-height:100vh}
+
+/* ── LOGIN ── */
+#loginWrap{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);
+}
+.login-card{
+  background:var(--paper);border-radius:8px;padding:40px 36px;
+  max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  text-align:center;
+}
+.login-card h1{font-family:var(--font-h);font-size:36px;color:var(--ink);margin-bottom:6px}
+.login-card p{color:var(--ink3);font-size:15px;margin-bottom:28px}
+.login-input{
+  width:100%;padding:12px 16px;border:2px solid #ccc;border-radius:6px;
+  font-family:var(--font-b);font-size:16px;background:#fdf9f3;
+  color:var(--ink);outline:none;margin-bottom:14px;
+  transition:border-color .2s;
+}
+.login-input:focus{border-color:var(--red)}
+.login-btn{
+  width:100%;padding:13px;font-family:var(--font-h);font-size:20px;font-weight:700;
+  background:var(--red);color:white;border:none;border-radius:6px;cursor:pointer;
+  transition:transform .2s;
+}
+.login-btn:hover{transform:translateY(-2px)}
+.login-err{color:var(--red);font-size:14px;margin-top:10px;display:none}
+
+/* ── APP SHELL ── */
+#appWrap{display:none;flex-direction:column;min-height:100vh}
+header{
+  background:#0f0f23;border-bottom:2px solid #2a2a4a;
+  padding:0 24px;display:flex;align-items:center;gap:16px;min-height:58px;
+  position:sticky;top:0;z-index:100;flex-shrink:0;
+}
+.brand{font-family:var(--font-h);font-size:26px;font-weight:700;color:#fff;margin-right:auto}
+.brand span{color:var(--red)}
+.h-tab{
+  font-family:var(--font-h);font-size:16px;font-weight:600;
+  padding:8px 18px;border-radius:6px;cursor:pointer;
+  color:#aaa;background:transparent;border:none;transition:all .2s;
+}
+.h-tab:hover{color:#fff;background:rgba(255,255,255,.07)}
+.h-tab.active{color:#fff;background:rgba(200,75,75,.25);color:var(--red)}
+.h-badge{
+  display:inline-block;background:var(--red);color:#fff;
+  font-size:11px;border-radius:10px;padding:1px 7px;margin-left:4px;
+}
+.logout-btn{
+  font-family:var(--font-b);font-size:14px;padding:7px 16px;
+  border:1px solid #444;border-radius:6px;color:#aaa;background:transparent;
+  cursor:pointer;transition:all .2s;
+}
+.logout-btn:hover{border-color:#c84b4b;color:#c84b4b}
+
+main{flex:1;padding:28px 24px;max-width:1300px;width:100%;margin:0 auto}
+
+/* ── TABS ── */
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── STAT CARDS ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{
+  background:#0f0f23;border:1px solid #2a2a4a;border-radius:10px;
+  padding:20px 18px;text-align:center;
+}
+.stat-num{font-family:var(--font-h);font-size:48px;font-weight:700;color:var(--red);line-height:1}
+.stat-label{color:#888;font-size:13px;margin-top:6px;font-family:var(--font-b)}
+.stat-sub{font-family:var(--font-h);font-size:14px;color:#666;margin-top:4px}
+
+/* ── SECTION HEADER ── */
+.sec-row{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.sec-h{font-family:var(--font-h);font-size:28px;font-weight:700;color:#fff}
+.sec-sub2{font-family:var(--font-b);font-size:14px;color:#888;flex:1}
+.pill-filter{
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;
+}
+.pf{
+  font-family:var(--font-b);font-size:13px;padding:5px 14px;
+  border:1px solid #333;border-radius:20px;color:#888;background:transparent;
+  cursor:pointer;transition:all .2s;
+}
+.pf.on,.pf:hover{border-color:var(--red);color:var(--red);background:rgba(200,75,75,.1)}
+
+/* ── COMMISSION CARDS ── */
+.comm-grid{display:flex;flex-direction:column;gap:14px}
+.comm-card{
+  background:#0f0f23;border:1px solid #2a2a4a;border-radius:10px;
+  padding:20px 22px;position:relative;transition:border-color .2s;
+}
+.comm-card:hover{border-color:#3a3a6a}
+.comm-top{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.comm-avatar{
+  width:48px;height:48px;border-radius:50%;background:rgba(200,75,75,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--red);flex-shrink:0;
+}
+.comm-name{font-family:var(--font-h);font-size:20px;font-weight:700;color:#fff}
+.comm-contact{font-size:13px;color:#888;margin-top:2px}
+.comm-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.badge{
+  font-family:var(--font-b);font-size:12px;padding:3px 10px;border-radius:12px;
+  border:1px solid currentColor;
+}
+.badge-type{color:#8ab4f8;border-color:#8ab4f8;background:rgba(138,180,248,.1)}
+.badge-pkg{color:#c8a862;border-color:#c8a862;background:rgba(200,168,98,.1)}
+.badge-new{color:var(--red);border-color:var(--red);background:rgba(200,75,75,.1)}
+.badge-inprog{color:var(--amber);border-color:var(--amber);background:rgba(200,139,58,.1)}
+.badge-done{color:var(--green);border-color:var(--green);background:rgba(74,158,92,.1)}
+.comm-desc{
+  font-size:14px;color:#bbb;margin-top:12px;line-height:1.7;
+  padding:12px 14px;background:rgba(255,255,255,.03);border-radius:6px;
+}
+.comm-special{font-size:13px;color:#888;margin-top:8px;font-style:italic}
+.comm-date{font-size:12px;color:#555;margin-top:10px}
+.comm-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center}
+.comm-actions select{
+  font-family:var(--font-b);font-size:13px;padding:6px 10px;
+  border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#eee;outline:none;
+}
+.comm-notes{
+  font-family:var(--font-b);font-size:13px;padding:7px 12px;
+  border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#eee;
+  flex:1;outline:none;min-width:200px;
+}
+.comm-notes:focus{border-color:var(--blue)}
+.act-btn{
+  font-family:var(--font-b);font-size:13px;padding:7px 16px;
+  border-radius:6px;cursor:pointer;border:1px solid;transition:all .2s;
+}
+.save-btn{color:var(--green);border-color:var(--green);background:rgba(74,158,92,.1)}
+.save-btn:hover{background:rgba(74,158,92,.2)}
+.del-btn{color:#ff6b6b;border-color:#ff6b6b;background:rgba(255,107,107,.1)}
+.del-btn:hover{background:rgba(255,107,107,.2)}
+.ref-link{color:var(--blue);font-size:13px;text-decoration:none}
+.ref-link:hover{text-decoration:underline}
+.empty-state{
+  text-align:center;padding:60px 20px;color:#555;
+  font-family:var(--font-h);font-size:22px;
+}
+.empty-state .big{font-size:48px;margin-bottom:12px}
+
+/* ── ARTWORK UPLOAD ── */
+.upload-zone{
+  border:2px dashed #333;border-radius:10px;padding:36px;
+  text-align:center;cursor:pointer;transition:border-color .2s;
+  background:#0a0a1a;margin-bottom:24px;
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--red)}
+.upload-zone .up-icon{font-size:48px;margin-bottom:12px}
+.upload-zone p{color:#888;font-family:var(--font-h);font-size:18px}
+.upload-zone small{color:#555;font-size:13px;font-family:var(--font-b)}
+.upload-form{
+  display:none;background:#0f0f23;border:1px solid #2a2a4a;border-radius:10px;
+  padding:24px;margin-bottom:24px;
+}
+.upload-form.open{display:block;animation:fadeIn .3s ease}
+.uf-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.uf-label{font-family:var(--font-h);font-size:16px;color:#ccc;margin-bottom:6px;display:block}
+.uf-input{
+  width:100%;padding:9px 14px;border:1px solid #333;border-radius:6px;
+  background:#1a1a2e;color:#eee;font-family:var(--font-b);font-size:14px;outline:none;
+  transition:border-color .2s;
+}
+.uf-input:focus{border-color:var(--red)}
+.uf-preview{
+  width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;
+  border:1px solid #333;display:none;margin-bottom:10px;
+}
+.upload-submit{
+  font-family:var(--font-h);font-size:18px;font-weight:700;padding:11px 28px;
+  background:var(--red);color:#fff;border:none;border-radius:6px;
+  cursor:pointer;transition:transform .2s;margin-top:14px;
+}
+.upload-submit:hover{transform:translateY(-2px)}
+.upload-cancel{
+  font-family:var(--font-b);font-size:14px;padding:11px 20px;
+  border:1px solid #444;border-radius:6px;color:#888;background:transparent;
+  cursor:pointer;margin-top:14px;margin-left:10px;
+}
+.upload-cancel:hover{color:#ccc}
+
+/* ── ARTWORK GRID ── */
+.art-admin-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px;
+}
+.art-admin-card{
+  background:#0f0f23;border:1px solid #2a2a4a;border-radius:8px;overflow:hidden;
+  transition:border-color .2s,transform .2s;position:relative;
+}
+.art-admin-card:hover{border-color:#3a3a6a;transform:translateY(-3px)}
+.art-admin-img{
+  width:100%;aspect-ratio:1;object-fit:cover;background:#1a1a2e;
+  display:flex;align-items:center;justify-content:center;font-size:48px;
+}
+.art-admin-img img{width:100%;height:100%;object-fit:cover}
+.art-admin-info{padding:12px}
+.art-admin-title{font-family:var(--font-h);font-size:17px;font-weight:700;color:#fff;margin-bottom:4px}
+.art-admin-meta{font-size:12px;color:#666}
+.art-admin-reactions{
+  display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;
+}
+.react-pill{
+  font-size:12px;background:rgba(255,255,255,.05);border-radius:20px;
+  padding:2px 8px;color:#aaa;
+}
+.art-admin-acts{
+  display:flex;gap:8px;padding:10px 12px;border-top:1px solid #1a1a2e;
+}
+.small-btn{
+  font-family:var(--font-b);font-size:12px;padding:5px 12px;
+  border-radius:6px;cursor:pointer;border:1px solid;flex:1;text-align:center;
+  transition:all .2s;
+}
+.edit-btn2{color:#8ab4f8;border-color:#8ab4f8;background:rgba(138,180,248,.1)}
+.del-btn2{color:#ff6b6b;border-color:#ff6b6b;background:rgba(255,107,107,.1)}
+.del-btn2:hover{background:rgba(255,107,107,.2)}
+.progress-bar{
+  display:none;height:4px;background:rgba(200,75,75,.3);border-radius:2px;
+  margin-top:14px;overflow:hidden;
+}
+.progress-fill{height:100%;background:var(--red);width:0;transition:width .3s}
+.toast{
+  position:fixed;bottom:24px;right:24px;background:#1a1a2e;border:1px solid var(--green);
+  border-radius:8px;padding:14px 20px;font-family:var(--font-h);font-size:16px;
+  color:var(--green);z-index:999;display:none;animation:fadeIn .3s ease;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+.toast.err{border-color:var(--red);color:var(--red)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  header{padding:0 12px;gap:8px}
+  .brand{font-size:20px}
+  .h-tab{display:none}
+  main{padding:16px 12px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .uf-grid{grid-template-columns:1fr}
+  .art-admin-grid{grid-template-columns:repeat(2,1fr)}
+  .comm-top{flex-direction:column;gap:8px}
+  .mobile-tabs{
+    display:flex;overflow-x:auto;gap:8px;padding:12px 12px 0;
+    background:#0f0f23;border-bottom:1px solid #2a2a4a;
+  }
+  .mobile-tabs .h-tab{display:flex;white-space:nowrap;font-size:14px;padding:8px 14px}
+}
+@media(min-width:641px){.mobile-tabs{display:none}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginWrap">
+  <div class="login-card">
+    <h1>Mugundan<span style="color:var(--red)">.</span></h1>
+    <p>Admin Panel — enter your password</p>
+    <input class="login-input" type="password" id="pwInput" placeholder="Password"
+           onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">Enter Studio ✏</button>
+    <p class="login-err" id="loginErr">Wrong password. Try again.</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appWrap">
+  <!-- Desktop header -->
+  <header>
+    <div class="brand">Mugundan<span>.</span> Admin</div>
+    <button class="h-tab active" onclick="switchTab('dashboard',this)">Dashboard</button>
+    <button class="h-tab" onclick="switchTab('commissions',this)">
+      Commissions <span class="h-badge" id="newBadge">0</span>
+    </button>
+    <button class="h-tab" onclick="switchTab('artworks',this)">Artworks</button>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </header>
+
+  <!-- Mobile tabs -->
+  <div class="mobile-tabs">
+    <button class="h-tab active" onclick="switchTab('dashboard',this)">Dashboard</button>
+    <button class="h-tab" onclick="switchTab('commissions',this)">Commissions</button>
+    <button class="h-tab" onclick="switchTab('artworks',this)">Artworks</button>
+    <button class="h-tab" onclick="doLogout()">Logout</button>
+  </div>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <div class="tab-panel active" id="tab-dashboard">
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="stat-num" id="st-total">–</div><div class="stat-label">Total Commissions</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-new" style="color:#c84b4b">–</div><div class="stat-label">New Requests</div><div class="stat-sub">Needs attention</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-prog" style="color:#c88b3a">–</div><div class="stat-label">In Progress</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-done" style="color:#4a9e5c">–</div><div class="stat-label">Completed</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-art" style="color:#4472b8">–</div><div class="stat-label">Artworks</div><div class="stat-sub">In gallery</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-react" style="color:#c8a862">–</div><div class="stat-label">Total Reactions</div></div>
+      </div>
+      <div style="background:#0f0f23;border:1px solid #2a2a4a;border-radius:10px;padding:28px;text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">🎨</div>
+        <p style="font-family:var(--font-h);font-size:22px;color:#fff;margin-bottom:8px">Welcome back, Mugundan!</p>
+        <p style="color:#888;font-size:15px">Manage your commissions, upload your artworks, and track reactions — all from here.</p>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+          <button class="upload-submit" style="font-size:16px;padding:10px 24px" onclick="switchTab('commissions',null)">View Commissions →</button>
+          <button class="upload-submit" style="font-size:16px;padding:10px 24px;background:#4472b8" onclick="switchTab('artworks',null)">Upload Artwork →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMISSIONS -->
+    <div class="tab-panel" id="tab-commissions">
+      <div class="sec-row">
+        <h2 class="sec-h">Commission Requests</h2>
+        <span class="sec-sub2">Tap a request to update its status or add notes</span>
+        <button class="upload-submit" style="font-size:14px;padding:8px 18px" onclick="loadCommissions()">↻ Refresh</button>
+      </div>
+      <div class="pill-filter" id="commFilter">
+        <button class="pf on" onclick="filterComm('all',this)">All</button>
+        <button class="pf" onclick="filterComm('new',this)">New</button>
+        <button class="pf" onclick="filterComm('in_progress',this)">In Progress</button>
+        <button class="pf" onclick="filterComm('done',this)">Done</button>
+      </div>
+      <div class="comm-grid" id="commGrid">
+        <div class="empty-state"><div class="big">📭</div>Loading requests...</div>
+      </div>
+    </div>
+
+    <!-- ARTWORKS -->
+    <div class="tab-panel" id="tab-artworks">
+      <div class="sec-row">
+        <h2 class="sec-h">Artwork Gallery</h2>
+        <span class="sec-sub2">Upload and manage all your drawings</span>
+        <button class="upload-submit" style="font-size:14px;padding:8px 18px" onclick="openUploadForm()">+ Upload Drawing</button>
+      </div>
+
+      <!-- Upload zone -->
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('artFile').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="handleDrop(event)">
+        <div class="up-icon">🖼</div>
+        <p>Click or drag images here to upload</p>
+        <small>PNG, JPG, WEBP — up to 20MB each — supports bulk upload (select multiple)</small>
+        <input type="file" id="artFile" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)"/>
+      </div>
+
+      <!-- Upload form -->
+      <div class="upload-form" id="uploadForm">
+        <div style="display:flex;gap:20px;flex-wrap:wrap">
+          <div style="flex-shrink:0">
+            <img class="uf-preview" id="ufPreview" alt="Preview"/>
+            <div style="font-family:var(--font-h);font-size:14px;color:#888;text-align:center" id="ufFilename"></div>
+            <div id="bulkInfo" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(68,114,184,.1);border-radius:6px;border:1px solid rgba(68,114,184,.3);font-size:13px;color:#8ab4f8;font-family:var(--font-b)"></div>
+          </div>
+          <div style="flex:1;min-width:240px">
+            <div class="uf-grid">
+              <div>
+                <label class="uf-label">Title *</label>
+                <input class="uf-input" id="ufTitle" placeholder="e.g. Portrait Study"/>
+              </div>
+              <div>
+                <label class="uf-label">Art Type *</label>
+                <select class="uf-input" id="ufType">
+                  <option value="pencil">Pencil Shading</option>
+                  <option value="watercolour">Watercolour</option>
+                  <option value="charcoal">Charcoal</option>
+                  <option value="acrylic">Acrylic</option>
+                  <option value="ink">Ink</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label class="uf-label">Medium</label>
+                <input class="uf-input" id="ufMedium" placeholder="e.g. Pencil on cartridge"/>
+              </div>
+              <div>
+                <label class="uf-label">Year</label>
+                <input class="uf-input" id="ufYear" placeholder="e.g. 2024"/>
+              </div>
+              <div>
+                <label class="uf-label">Size</label>
+                <input class="uf-input" id="ufSize" placeholder="e.g. A3, 29×42 cm"/>
+              </div>
+              <div>
+                <label class="uf-label">Display Order</label>
+                <input class="uf-input" id="ufOrder" type="number" placeholder="0" value="0"/>
+              </div>
+            </div>
+            <div style="margin-top:14px">
+              <label class="uf-label">Description</label>
+              <textarea class="uf-input" id="ufDesc" rows="3" placeholder="Optional — what's the story behind this piece?"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+        <div>
+          <button class="upload-submit" onclick="submitArtwork()">Upload Artwork ✏</button>
+          <button class="upload-cancel" onclick="closeUploadForm()">Cancel</button>
+          <span id="uploadStatus" style="font-size:13px;color:#888;margin-left:12px"></span>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="pill-filter" id="artFilter">
+        <button class="pf on" onclick="filterArt('all',this)">All</button>
+        <button class="pf" onclick="filterArt('pencil',this)">Pencil</button>
+        <button class="pf" onclick="filterArt('watercolour',this)">Watercolour</button>
+        <button class="pf" onclick="filterArt('charcoal',this)">Charcoal</button>
+        <button class="pf" onclick="filterArt('acrylic',this)">Acrylic</button>
+        <button class="pf" onclick="filterArt('ink',this)">Ink</button>
+        <button class="pf" onclick="filterArt('other',this)">Other</button>
+      </div>
+
+      <div class="art-admin-grid" id="artGrid">
+        <div class="empty-state" style="grid-column:1/-1"><div class="big">🖼</div>No artworks yet — upload your first drawing!</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = window.location.origin + '/api';
+let TOKEN = localStorage.getItem('mug_admin_token') || '';
+let pendingFiles = [];
+let currentArtFilter = 'all';
+let currentCommFilter = 'all';
+
+/* ── AUTO LOGIN CHECK ── */
+if (TOKEN) tryAutoLogin();
+
+async function tryAutoLogin() {
+  const r = await fetch(API+'/admin/stats',{headers:{'X-Admin-Token':TOKEN}});
+  if (r.ok) showApp();
+  else { TOKEN=''; localStorage.removeItem('mug_admin_token'); }
+}
+
+/* ── LOGIN ── */
+async function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  const r  = await fetch(API+'/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+  const d  = await r.json();
+  if (d.ok) {
+    TOKEN = d.token;
+    localStorage.setItem('mug_admin_token', TOKEN);
+    showApp();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+    document.getElementById('pwInput').value='';
+  }
+}
+
+async function doLogout() {
+  await fetch(API+'/admin/logout',{method:'POST',headers:{'X-Admin-Token':TOKEN}});
+  TOKEN=''; localStorage.removeItem('mug_admin_token');
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('loginWrap').style.display='flex';
+}
+
+function showApp() {
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').style.display='flex';
+  loadStats();
+  loadCommissions();
+  loadArtworks();
+}
+
+/* ── TABS ── */
+function switchTab(id, el) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.h-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if (el) el.classList.add('active');
+  // sync both desktop+mobile tabs
+  document.querySelectorAll('.h-tab').forEach(t => {
+    if(t.textContent.toLowerCase().includes(id.toLowerCase())) t.classList.add('active');
+  });
+}
+
+/* ── STATS ── */
+async function loadStats() {
+  const r = await fetch(API+'/admin/stats',{headers:{'X-Admin-Token':TOKEN}});
+  if(!r.ok) return;
+  const d = await r.json();
+  document.getElementById('st-total').textContent = d.commissions.total;
+  document.getElementById('st-new').textContent   = d.commissions.new;
+  document.getElementById('st-prog').textContent  = d.commissions.in_progress;
+  document.getElementById('st-done').textContent  = d.commissions.done;
+  document.getElementById('st-art').textContent   = d.artworks;
+  document.getElementById('st-react').textContent = d.reactions;
+  document.getElementById('newBadge').textContent = d.commissions.new;
+}
+
+/* ── COMMISSIONS ── */
+let allComms = [];
+
+async function loadCommissions() {
+  const r = await fetch(API+'/admin/commissions',{headers:{'X-Admin-Token':TOKEN}});
+  allComms = await r.json();
+  renderComms();
+  loadStats();
+}
+
+function filterComm(status, el) {
+  currentCommFilter = status;
+  document.querySelectorAll('#commFilter .pf').forEach(b=>b.classList.remove('on'));
+  if(el) el.classList.add('on');
+  renderComms();
+}
+
+function renderComms() {
+  const filtered = currentCommFilter==='all' ? allComms : allComms.filter(c=>c.status===currentCommFilter);
+  const grid = document.getElementById('commGrid');
+  if (!filtered.length) {
+    grid.innerHTML='<div class="empty-state"><div class="big">📭</div>No commissions here yet</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(c => {
+    const initials = c.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const badge = c.status==='new'?'badge-new':c.status==='in_progress'?'badge-inprog':'badge-done';
+    const statusLabel = c.status==='in_progress'?'In Progress':c.status==='new'?'New':'Done';
+    const date = new Date(c.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `
+    <div class="comm-card" id="cc-${c.id}">
+      <div class="comm-top">
+        <div class="comm-avatar">${initials}</div>
+        <div style="flex:1">
+          <div class="comm-name">${esc(c.name)}</div>
+          <div class="comm-contact">📱 ${esc(c.contact)}</div>
+        </div>
+        <span class="badge ${badge}">${statusLabel}</span>
+      </div>
+      <div class="comm-meta">
+        <span class="badge badge-type">🎨 ${esc(c.art_type)}</span>
+        <span class="badge badge-pkg">💰 ${esc(c.package)}</span>
+      </div>
+      <div class="comm-desc">${esc(c.description)}</div>
+      ${c.special ? `<div class="comm-special">📌 Special: ${esc(c.special)}</div>` : ''}
+      ${c.ref_file ? `<div style="margin-top:8px"><a class="ref-link" href="/uploads/${c.ref_file}" target="_blank">📎 View reference image →</a></div>` : ''}
+      <div class="comm-date">Received: ${date}</div>
+      <div class="comm-actions">
+        <select id="st-${c.id}" onchange="">
+          <option value="new" ${c.status==='new'?'selected':''}>🔴 New</option>
+          <option value="in_progress" ${c.status==='in_progress'?'selected':''}>🟡 In Progress</option>
+          <option value="done" ${c.status==='done'?'selected':''}>🟢 Done</option>
+        </select>
+        <input class="comm-notes" id="notes-${c.id}" value="${esc(c.notes||'')}" placeholder="Add a note (e.g. WhatsApp'd client)…"/>
+        <button class="act-btn save-btn" onclick="saveComm('${c.id}')">Save</button>
+        <button class="act-btn del-btn" onclick="deleteComm('${c.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveComm(id) {
+  const status = document.getElementById('st-'+id).value;
+  const notes  = document.getElementById('notes-'+id).value;
+  await fetch(API+'/admin/commissions/'+id,{
+    method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Token':TOKEN},
+    body:JSON.stringify({status,notes})
+  });
+  showToast('Saved!');
+  loadCommissions();
+}
+
+async function deleteComm(id) {
+  if (!confirm('Delete this commission request? This cannot be undone.')) return;
+  await fetch(API+'/admin/commissions/'+id,{method:'DELETE',headers:{'X-Admin-Token':TOKEN}});
+  showToast('Deleted');
+  loadCommissions();
+}
+
+/* ── ARTWORKS ── */
+let allArts = [];
+
+async function loadArtworks() {
+  const r = await fetch(API+'/admin/artworks',{headers:{'X-Admin-Token':TOKEN}});
+  allArts = await r.json();
+  renderArts();
+  loadStats();
+}
+
+function filterArt(type, el) {
+  currentArtFilter = type;
+  document.querySelectorAll('#artFilter .pf').forEach(b=>b.classList.remove('on'));
+  if(el) el.classList.add('on');
+  renderArts();
+}
+
+function renderArts() {
+  const filtered = currentArtFilter==='all' ? allArts : allArts.filter(a=>a.art_type===currentArtFilter);
+  const grid = document.getElementById('artGrid');
+  if (!filtered.length) {
+    grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="big">🖼</div>No artworks yet</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(a => {
+    const reacts = ['❤️','🔥','😍','👏','✨'].map(e=>`<span class="react-pill">${e} ${a['react_'+e]||0}</span>`).join('');
+    return `
+    <div class="art-admin-card">
+      <div class="art-admin-img">
+        <img src="/uploads/${a.filename}" alt="${esc(a.title)}" loading="lazy"
+             onerror="this.parentNode.innerHTML='<div style=font-size:48px;text-align:center>🖼</div>'"/>
+      </div>
+      <div class="art-admin-info">
+        <div class="art-admin-title">${esc(a.title)}</div>
+        <div class="art-admin-meta">${esc(a.art_type)} · ${esc(a.year||'–')} · ${esc(a.size||'–')}</div>
+        <div class="art-admin-reactions">${reacts}</div>
+      </div>
+      <div class="art-admin-acts">
+        <button class="small-btn del-btn2" onclick="deleteArt('${a.id}')">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteArt(id) {
+  if (!confirm('Delete this artwork permanently?')) return;
+  await fetch(API+'/admin/artworks/'+id,{method:'DELETE',headers:{'X-Admin-Token':TOKEN}});
+  showToast('Artwork deleted');
+  loadArtworks();
+}
+
+/* ── UPLOAD ── */
+function openUploadForm() {
+  document.getElementById('uploadForm').classList.add('open');
+  document.getElementById('uploadZone').style.display='none';
+}
+function closeUploadForm() {
+  document.getElementById('uploadForm').classList.remove('open');
+  document.getElementById('uploadZone').style.display='block';
+  pendingFiles=[];
+  document.getElementById('ufPreview').style.display='none';
+  document.getElementById('bulkInfo').style.display='none';
+  document.getElementById('uploadStatus').textContent='';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+}
+
+function handleFiles(files) {
+  if (!files.length) return;
+  pendingFiles = Array.from(files);
+  openUploadForm();
+  if (pendingFiles.length === 1) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById('ufPreview');
+      img.src = e.target.result; img.style.display='block';
+    };
+    reader.readAsDataURL(pendingFiles[0]);
+    document.getElementById('ufFilename').textContent = pendingFiles[0].name;
+    document.getElementById('bulkInfo').style.display='none';
+  } else {
+    document.getElementById('ufPreview').style.display='none';
+    document.getElementById('ufFilename').textContent='';
+    const bi = document.getElementById('bulkInfo');
+    bi.style.display='block';
+    bi.textContent=`📦 ${pendingFiles.length} images selected — they will all be uploaded with the same details. You can edit titles after.`;
+  }
+}
+
+async function submitArtwork() {
+  if (!pendingFiles.length) { showToast('No file selected','err'); return; }
+  const title = document.getElementById('ufTitle').value.trim();
+  if (!title) { showToast('Please enter a title','err'); return; }
+
+  const bar  = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  const stat = document.getElementById('uploadStatus');
+  bar.style.display='block'; fill.style.width='0';
+
+  let done=0;
+  for (let i=0; i<pendingFiles.length; i++) {
+    const fd = new FormData();
+    fd.append('image', pendingFiles[i]);
+    fd.append('title', pendingFiles.length>1 ? `${title} ${i+1}` : title);
+    fd.append('art_type', document.getElementById('ufType').value);
+    fd.append('medium',   document.getElementById('ufMedium').value);
+    fd.append('year',     document.getElementById('ufYear').value);
+    fd.append('size',     document.getElementById('ufSize').value);
+    fd.append('description', document.getElementById('ufDesc').value);
+    fd.append('order_idx',   document.getElementById('ufOrder').value);
+    stat.textContent = `Uploading ${i+1} of ${pendingFiles.length}…`;
+    await fetch(API+'/admin/artworks',{method:'POST',headers:{'X-Admin-Token':TOKEN},body:fd});
+    done++;
+    fill.style.width = (done/pendingFiles.length*100)+'%';
+  }
+
+  showToast(`${done} artwork${done>1?'s':''} uploaded!`);
+  closeUploadForm();
+  loadArtworks();
+}
+
+/* ── UTILS ── */
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = (type==='err'?'❌ ':'✅ ')+msg;
+  t.className = 'toast'+(type?' '+type:'');
+  t.style.display='block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.style.display='none', 3000);
+}
+
+// Poll for new commissions every 60s
+setInterval(()=>{ if(TOKEN){ loadStats(); } }, 60000);
+</script>
+</body>
+</html>
